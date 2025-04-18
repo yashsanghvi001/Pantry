@@ -15,7 +15,7 @@ const jwt = require('jsonwebtoken');
  * @returns {number} User ID of the newly created user
  * @throws {Error} If email already exists
  */
-const registerUser = async (email, password,role, auth_provider) => {
+const registerUser = async (email, password, auth_provider) => {
   // Check if user already exists
   const existingUser = await userDal.getUserByEmail(email);
   if (existingUser) {
@@ -27,7 +27,7 @@ const registerUser = async (email, password,role, auth_provider) => {
   const hashedPassword = await bcrypt.hash(password, salt);
   
   // Create new user
-  const userId = await userDal.createUser(email, hashedPassword,role, auth_provider);
+  const userId = await userDal.createUser(email, hashedPassword, auth_provider);
   return userId;
 };
 

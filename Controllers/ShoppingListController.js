@@ -78,3 +78,13 @@ const deleteShoppingListItemController = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
+
+module.exports = {
+  createShoppingListController,
+  getShoppingListsController,
+  getShoppingListController,
+  updateShoppingListController,
+  deleteShoppingListController,
+  addItemToShoppingListController,
+  deleteShoppingListItemController,
+};

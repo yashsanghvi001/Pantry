@@ -31,3 +31,13 @@ const addItemToShoppingListBal = async (list_id, product_id, quantity) => {
 const deleteShoppingListItemBal = async (item_id) => {
   await shoppingListDal.deleteShoppingListItem(item_id);
 };
+
+module.exports = {
+  createShoppingListBal,
+  getShoppingLists,
+  getShoppingList,
+  updateShoppingListBal,
+  deleteShoppingListBal,
+  addItemToShoppingListBal,
+  deleteShoppingListItemBal,
+};

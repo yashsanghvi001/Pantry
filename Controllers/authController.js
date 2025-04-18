@@ -22,7 +22,7 @@ const register = async (req, res) => {
   try {
     const { email, password,role, auth_provider} = req.body;
     // Register user through business logic layer
-    const userId = await userBal.registerUser(email, password,role, auth_provider || 'email');
+    const userId = await userBal.registerUser(email, password, auth_provider || 'email');
     res.status(201).json({ message: 'User registered successfully', user_id: userId });
   } catch (error) {
     res.status(400).json({ message: error.message });

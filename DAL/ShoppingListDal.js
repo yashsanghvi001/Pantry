@@ -40,3 +40,13 @@ const addItemToShoppingList = async (list_id, product_id, quantity) => {
 const deleteShoppingListItem = async (item_id) => {
   await db.query('DELETE FROM Shopping_List_Items WHERE item_id = ?', [item_id]);
 };
+
+module.exports = {
+  createShoppingList,
+  getShoppingListsByUser,
+  getShoppingListById,
+  updateShoppingList,
+  deleteShoppingList,
+  addItemToShoppingList,
+  deleteShoppingListItem,
+};

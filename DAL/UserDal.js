@@ -32,10 +32,10 @@ const getUserById = async (id) => {
  * @param {string} auth_provider - Authentication provider
  * @returns {number} ID of the newly created user
  */
-const createUser = async (email, password,role, auth_provider) => {
+const createUser = async (email, password, auth_provider) => {
   const [result] = await db.query(
-    'INSERT INTO Users (email, password, role, auth_provider) VALUES (?, ?, ?)',
-    [email, password,role, auth_provider]
+    'INSERT INTO Users (email, password, auth_provider) VALUES (?, ?, ?)',
+    [email, password, auth_provider]
   );
   return result.insertId;
 };
