@@ -1,0 +1,60 @@
+-- Create the database if it doesn't exist
+CREATE DATABASE IF NOT EXISTS pantry_list;
+USE pantry_list;
+
+-- Users table
+CREATE TABLE IF NOT EXISTS Users (
+    user_id INT PRIMARY KEY AUTO_INCREMENT,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    auth_provider ENUM('email', 'google', 'apple') DEFAULT 'email',
+    role VARCHAR(50) DEFAULT 'user',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Lists table
+CREATE TABLE IF NOT EXISTS Lists (
+    list_id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE
+);
+
+-- Shopping Lists table
+CREATE TABLE IF NOT EXISTS ShoppingLists (
+    shopping_list_id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE
+);
+
+-- Items table
+CREATE TABLE IF NOT EXISTS Items (
+    item_id INT PRIMARY KEY AUTO_INCREMENT,
+    list_id INT NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    quantity INT DEFAULT 1,
+    unit VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (list_id) REFERENCES Lists(list_id) ON DELETE CASCADE
+);
+
+-- Shopping List Items table
+CREATE TABLE IF NOT EXISTS ShoppingListItems (
+    item_id INT PRIMARY KEY AUTO_INCREMENT,
+    shopping_list_id INT NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    quantity INT DEFAULT 1,
+    unit VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (shopping_list_id) REFERENCES ShoppingLists(shopping_list_id) ON DELETE CASCADE
+); 
