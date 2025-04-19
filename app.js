@@ -9,6 +9,9 @@ const app = express();
 const bodyParser = require('body-parser');
 const cors = require('cors');
 
+// Import middleware
+const responseHandler = require('./middleware/responseHandler');
+
 // Import route handlers
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
@@ -17,6 +20,7 @@ const listRoutes = require('./routes/listRoutes');
 // Configure middleware
 app.use(cors());  // Enable Cross-Origin Resource Sharing
 app.use(bodyParser.json());  // Parse JSON request bodies
+app.use(responseHandler);  // Standardize API responses
 
 // Register API routes
 app.use('/api/auth', authRoutes);    // Authentication routes

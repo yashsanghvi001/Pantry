@@ -1,52 +1,117 @@
-const db = require('../config/db');
+/**
+ * Shopping List Data Access Layer
+ * Handles all database operations related to shopping lists using Sequelize ORM
+ */
 
-const createShoppingList = async (user_id, name) => {
-  const [result] = await db.query(
-    'INSERT INTO Shopping_Lists (user_id, name) VALUES (?, ?)',
-    [user_id, name]
-  );
-  return result.insertId;
+const ShoppingList = require('../models/ShoppingList');
+const ShoppingListItem = require('../models/ShoppingListItem');
+const Product = require('../models/Product');
+
+/**
+ * Create a new shopping list
+ * @param {number} userId - User ID
+ * @param {string} name - List name
+ * @returns {Object} Created shopping list
+ */
+const createShoppingList = async (userId, name) => {
+  return await ShoppingList.create({
+    user_id: userId,
+    name
+  });
 };
 
-const getShoppingListsByUser = async (user_id) => {
-  const [rows] = await db.query('SELECT * FROM Shopping_Lists WHERE user_id = ?', [user_id]);
-  return rows;
+/**
+ * Get all shopping lists for a user
+ * @param {number} userId - User ID
+ * @returns {Array} Array of shopping lists
+ */
+const getShoppingLists = async (userId) => {
+  return await ShoppingList.findAll({
+    where: { user_id: userId },
+    include: [{
+      model: ShoppingListItem,
+      include: [Product]
+    }]
+  });
 };
 
-const getShoppingListById = async (id) => {
-  const [rows] = await db.query('SELECT * FROM Shopping_Lists WHERE list_id = ?', [id]);
-  return rows[0];
+/**
+ * Get a specific shopping list
+ * @param {number} listId - List ID
+ * @returns {Object} Shopping list with items
+ */
+const getShoppingList = async (listId) => {
+  return await ShoppingList.findByPk(listId, {
+    include: [{
+      model: ShoppingListItem,
+      include: [Product]
+    }]
+  });
 };
 
-const updateShoppingList = async (id, name) => {
-  await db.query(
-    'UPDATE Shopping_Lists SET name = ? WHERE list_id = ?',
-    [name, id]
-  );
+/**
+ * Update a shopping list
+ * @param {number} listId - List ID
+ * @param {Object} updateData - Data to update
+ * @returns {Object} Updated shopping list
+ */
+const updateShoppingList = async (listId, updateData) => {
+  const list = await ShoppingList.findByPk(listId);
+  if (!list) {
+    throw new Error('Shopping list not found');
+  }
+  return await list.update(updateData);
 };
 
-const deleteShoppingList = async (id) => {
-  await db.query('DELETE FROM Shopping_Lists WHERE list_id = ?', [id]);
+/**
+ * Delete a shopping list
+ * @param {number} listId - List ID
+ * @returns {boolean} True if deletion was successful
+ */
+const deleteShoppingList = async (listId) => {
+  const list = await ShoppingList.findByPk(listId);
+  if (!list) {
+    throw new Error('Shopping list not found');
+  }
+  await list.destroy();
+  return true;
 };
 
-const addItemToShoppingList = async (list_id, product_id, quantity) => {
-  const [result] = await db.query(
-    'INSERT INTO Shopping_List_Items (list_id, product_id, quantity) VALUES (?, ?, ?)',
-    [list_id, product_id, quantity]
-  );
-  return result.insertId;
+/**
+ * Add an item to a shopping list
+ * @param {number} listId - List ID
+ * @param {number} productId - Product ID
+ * @param {number} quantity - Item quantity
+ * @returns {Object} Created shopping list item
+ */
+const addItemToShoppingList = async (listId, productId, quantity) => {
+  return await ShoppingListItem.create({
+    list_id: listId,
+    product_id: productId,
+    quantity
+  });
 };
 
-const deleteShoppingListItem = async (item_id) => {
-  await db.query('DELETE FROM Shopping_List_Items WHERE item_id = ?', [item_id]);
+/**
+ * Delete an item from a shopping list
+ * @param {number} itemId - Item ID
+ * @returns {boolean} True if deletion was successful
+ */
+const deleteShoppingListItem = async (itemId) => {
+  const item = await ShoppingListItem.findByPk(itemId);
+  if (!item) {
+    throw new Error('Shopping list item not found');
+  }
+  await item.destroy();
+  return true;
 };
 
 module.exports = {
   createShoppingList,
-  getShoppingListsByUser,
-  getShoppingListById,
+  getShoppingLists,
+  getShoppingList,
   updateShoppingList,
   deleteShoppingList,
   addItemToShoppingList,
-  deleteShoppingListItem,
+  deleteShoppingListItem
 };

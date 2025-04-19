@@ -1,9 +1,10 @@
 /**
  * User Data Access Layer
- * Handles all database operations related to user management
+ * Handles all database operations related to user management using Sequelize ORM
  */
 
-const db = require('../config/db');
+const User = require('../models/User');
+const EmailVerificationToken = require('../models/EmailVerificationToken');
 
 /**
  * Retrieve user by email address
@@ -11,8 +12,7 @@ const db = require('../config/db');
  * @returns {Object|null} User object if found, null otherwise
  */
 const getUserByEmail = async (email) => {
-  const [rows] = await db.query('SELECT * FROM Users WHERE email = ?', [email]);
-  return rows[0];
+  return await User.findOne({ where: { email } });
 };
 
 /**
@@ -21,8 +21,7 @@ const getUserByEmail = async (email) => {
  * @returns {Object|null} User object if found, null otherwise
  */
 const getUserById = async (id) => {
-  const [rows] = await db.query('SELECT * FROM Users WHERE user_id = ?', [id]);
-  return rows[0];
+  return await User.findByPk(id);
 };
 
 /**
@@ -30,35 +29,93 @@ const getUserById = async (id) => {
  * @param {string} email - User's email address
  * @param {string} password - Hashed password
  * @param {string} auth_provider - Authentication provider
- * @returns {number} ID of the newly created user
+ * @returns {Object} Created user object
  */
 const createUser = async (email, password, auth_provider) => {
-  const [result] = await db.query(
-    'INSERT INTO Users (email, password, auth_provider) VALUES (?, ?, ?)',
-    [email, password, auth_provider]
-  );
-  return result.insertId;
+  return await User.create({
+    email,
+    password,
+    auth_provider
+  });
 };
 
 /**
  * Update user information
  * @param {number} id - User ID
- * @param {string} email - New email address
- * @param {string} password - New hashed password
+ * @param {Object} updateData - Object containing fields to update
+ * @returns {Object} Updated user object
  */
-const updateUser = async (id, email, password) => {
-  await db.query(
-    'UPDATE Users SET email = ?, password = ? WHERE user_id = ?',
-    [email, password, id]
-  );
+const updateUser = async (id, updateData) => {
+  const user = await User.findByPk(id);
+  if (!user) {
+    throw new Error('User not found');
+  }
+  return await user.update(updateData);
 };
 
 /**
  * Delete user by ID
  * @param {number} id - User ID
+ * @returns {boolean} True if deletion was successful
  */
 const deleteUser = async (id) => {
-  await db.query('DELETE FROM Users WHERE user_id = ?', [id]);
+  const user = await User.findByPk(id);
+  if (!user) {
+    throw new Error('User not found');
+  }
+  await user.destroy();
+  return true;
+};
+
+/**
+ * Save email verification token
+ * @param {number} userId - User ID
+ * @param {string} token - Verification token
+ * @param {Date} expiresAt - Token expiration date
+ * @returns {Object} Created token object
+ */
+const saveVerificationToken = async (userId, token, expiresAt) => {
+  return await EmailVerificationToken.create({
+    user_id: userId,
+    token,
+    expires_at: expiresAt
+  });
+};
+
+/**
+ * Get verification token
+ * @param {string} token - Verification token
+ * @returns {Object|null} Token object if found, null otherwise
+ */
+const getVerificationToken = async (token) => {
+  return await EmailVerificationToken.findOne({ where: { token } });
+};
+
+/**
+ * Mark user as verified
+ * @param {number} userId - User ID
+ * @returns {Object} Updated user object
+ */
+const markUserAsVerified = async (userId) => {
+  const user = await User.findByPk(userId);
+  if (!user) {
+    throw new Error('User not found');
+  }
+  return await user.update({ is_verified: true });
+};
+
+/**
+ * Delete verification token
+ * @param {string} token - Verification token
+ * @returns {boolean} True if deletion was successful
+ */
+const deleteVerificationToken = async (token) => {
+  const verificationToken = await EmailVerificationToken.findOne({ where: { token } });
+  if (!verificationToken) {
+    throw new Error('Token not found');
+  }
+  await verificationToken.destroy();
+  return true;
 };
 
 module.exports = {
@@ -66,5 +123,9 @@ module.exports = {
   getUserById,
   createUser,
   updateUser,
-  deleteUser
+  deleteUser,
+  saveVerificationToken,
+  getVerificationToken,
+  markUserAsVerified,
+  deleteVerificationToken
 };

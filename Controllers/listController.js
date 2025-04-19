@@ -1,122 +1,195 @@
+/**
+ * List Controller
+ * Handles list-related operations
+ */
+
 const { body, validationResult } = require('express-validator');
 const listBal = require('../BAL/ListBal');
+const { errorMessages, successMessages } = require('../config/messages');
 
-const createList = async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-  try {
-    const { name, budget } = req.body;
-    const listId = await listBal.createList(req.user.id, name, budget);
-    res.status(201).json({ message: 'List created successfully', list_id: listId });
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-};
-
+/**
+ * Get all lists for a user
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with lists
+ */
 const getLists = async (req, res) => {
   try {
-    const lists = await listBal.getLists(req.user.id);
-    res.json(lists);
+    const userId = req.user.id;
+    const lists = await listBal.getLists(userId);
+    return res.success(successMessages.LIST.RETRIEVED, { lists });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    return res.error(error.message);
   }
 };
 
+/**
+ * Get a specific list by ID
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with list
+ */
 const getList = async (req, res) => {
   try {
-    const list = await listBal.getList(req.params.id);
-    res.json(list);
+    const { id } = req.params;
+    const list = await listBal.getList(id);
+    return res.success(successMessages.LIST.RETRIEVED, { list });
   } catch (error) {
-    res.status(404).json({ message: error.message });
+    return res.error(error.message);
   }
 };
 
-const updateList = async (req, res) => {
+/**
+ * Create a new list
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with created list
+ */
+const createList = async (req, res) => {
+  // Validate request body
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+    return res.error('Validation failed', { errors: errors.array() });
   }
+
   try {
     const { name, budget } = req.body;
-    await listBal.updateList(req.params.id, name, budget);
-    res.json({ message: 'List updated successfully' });
+    const userId = req.user.id;
+    const list = await listBal.createList(userId, name, budget);
+    return res.success(successMessages.LIST.CREATED, { list });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    return res.error(error.message);
   }
 };
 
+/**
+ * Update an existing list
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with updated list
+ */
+const updateList = async (req, res) => {
+  // Validate request body
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.error('Validation failed', { errors: errors.array() });
+  }
+
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+    const list = await listBal.updateList(id, updateData);
+    return res.success(successMessages.LIST.UPDATED, { list });
+  } catch (error) {
+    return res.error(error.message);
+  }
+};
+
+/**
+ * Delete a list
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with deletion status
+ */
 const deleteList = async (req, res) => {
   try {
-    await listBal.deleteList(req.params.id);
-    res.json({ message: 'List deleted successfully' });
+    const { id } = req.params;
+    await listBal.deleteList(id);
+    return res.success(successMessages.LIST.DELETED);
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    return res.error(error.message);
   }
 };
 
+/**
+ * Add an item to a list
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with created list item
+ */
 const addItemToList = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+    return res.error('Validation failed', { errors: errors.array() });
   }
   try {
     const { product_id, custom_name, quantity } = req.body;
-    const itemId = await listBal.addItemToList(req.params.id, product_id, custom_name, quantity);
-    res.status(201).json({ message: 'Item added to list', item_id: itemId });
+    const listItem = await listBal.addItemToList(req.params.id, product_id, custom_name, quantity);
+    return res.success(successMessages.LIST.ITEM_ADDED, { list_item: listItem });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    return res.error(error.message);
   }
 };
 
+/**
+ * Update a list item
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with updated list item
+ */
 const updateListItem = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+    return res.error('Validation failed', { errors: errors.array() });
   }
   try {
-    const { quantity, in_cart } = req.body;
-    await listBal.updateListItem(req.params.itemId, quantity, in_cart);
-    res.json({ message: 'List item updated successfully' });
+    const { itemId } = req.params;
+    const updateData = req.body;
+    const listItem = await listBal.updateListItem(itemId, updateData);
+    return res.success(successMessages.LIST.ITEM_UPDATED, { list_item: listItem });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    return res.error(error.message);
   }
 };
 
+/**
+ * Delete a list item
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with deletion status
+ */
 const deleteListItem = async (req, res) => {
   try {
-    await listBal.deleteListItem(req.params.itemId);
-    res.json({ message: 'List item deleted successfully' });
+    const { itemId } = req.params;
+    await listBal.deleteListItem(itemId);
+    return res.success(successMessages.LIST.ITEM_DELETED);
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    return res.error(error.message);
   }
 };
 
+/**
+ * Share a list with a user
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with sharing status
+ */
 const shareList = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+    return res.error('Validation failed', { errors: errors.array() });
   }
   try {
+    const { id } = req.params;
     const { email } = req.body;
-    await listBal.shareList(req.params.id, email);
-    res.json({ message: 'List shared successfully' });
+    const listMember = await listBal.shareList(id, email);
+    return res.success(successMessages.LIST.SHARED, { list_member: listMember });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    return res.error(error.message);
   }
 };
 
+// Export routes with validation middleware
 module.exports = {
+  getLists,
+  getList,
   createList: [
-    body('name').notEmpty().withMessage('Name is required'),
+    body('name').notEmpty().withMessage(errorMessages.VALIDATION.REQUIRED_FIELD('name')),
     body('budget').optional().isFloat({ min: 0 }).withMessage('Budget must be a positive number'),
     createList
   ],
-  getLists,
-  getList,
   updateList: [
-    body('name').optional().notEmpty().withMessage('Name cannot be empty'),
+    body('name').optional().notEmpty().withMessage(errorMessages.VALIDATION.REQUIRED_FIELD('name')),
     body('budget').optional().isFloat({ min: 0 }).withMessage('Budget must be a positive number'),
     updateList
   ],
